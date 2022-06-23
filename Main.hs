@@ -27,9 +27,18 @@ main = do
       month = last argsAsNum
 
   when (length argsAsNum /= 2) usageFail
+  when (year < 2006) do
+    putStrLn "The earliest date is 2006-08-31"
+    usageFail
+  when (year == 2006 && month < 8) do
+    putStrLn "The earliest date is 2006-08-31"
+    usageFail
   when (month < 1 || month > 12) usageFail
 
-  let days = [1 .. numDaysInMonth year month]
+  let days =
+        if year == 2006 && month == 8
+          then [31] -- earliest date is 2006-08-31
+          else [1 .. numDaysInMonth year month]
       urls = map (dateToUrl year month) days
 
   result <- catMaybes <$> for urls extractWord
