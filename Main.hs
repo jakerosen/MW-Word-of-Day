@@ -35,10 +35,7 @@ main = do
     usageFail
   when (month < 1 || month > 12) usageFail
 
-  let days =
-        if year == 2006 && month == 8
-          then [31] -- earliest date is 2006-08-31
-          else [1 .. numDaysInMonth year month]
+  let days = [1 .. numDaysInMonth year month]
       urls = map (dateToUrl year month) days
 
   result <- catMaybes <$> for urls extractWord
@@ -51,13 +48,15 @@ usageFail = do
   exitFailure
 
 extractWord :: URL -> IO (Maybe Text)
-extractWord url = scrapeURL url scraper
-  where
-    -- The word happens to be in the only h1 element, so I assume that and just
-    -- grab it
-    selectWord = "h1"
-    scrapeWord = text "h1"
-    scraper = chroot selectWord scrapeWord
+extractWord url = do
+  let -- The word happens to be in the only h1 element, so I assume that and
+      -- just grab it
+      selectWord = "h1"
+      scrapeWord = text "h1"
+      scraper = chroot selectWord scrapeWord
+  result <- scrapeURLWithConfig (Config utf8Decoder Nothing) url scraper
+  -- filter out "Word of the Day" that gets extracted if the web page redirects
+  pure (if result == Just "Word of the Day" then Nothing else result)
 
 type Year = Int
 
