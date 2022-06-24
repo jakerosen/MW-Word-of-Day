@@ -48,15 +48,11 @@ usageFail = do
   exitFailure
 
 extractWord :: URL -> IO (Maybe Text)
-extractWord url = do
-  let -- The word happens to be in the only h1 element, so I assume that and
-      -- just grab it
-      selectWord = "h1"
-      scrapeWord = text "h1"
-      scraper = chroot selectWord scrapeWord
-  result <- scrapeURLWithConfig (Config utf8Decoder Nothing) url scraper
-  -- filter out "Word of the Day" that gets extracted if the web page redirects
-  pure (if result == Just "Word of the Day" then Nothing else result)
+extractWord url = scrapeURLWithConfig (Config utf8Decoder Nothing) url scraper
+  where
+    selectWord = "div" @: [hasClass "word-and-pronunciation"] // "h1"
+    scrapeWord = text "h1"
+    scraper = chroot selectWord scrapeWord
 
 type Year = Int
 
